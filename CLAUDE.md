@@ -27,7 +27,10 @@ Velger du ingen av delene nå, står malen som en statisk side til du bestemmer 
   (`--kodo-*`-tokens; `@source` der gjør at Tailwind genererer klassene til shared-komponentene).
 - `AGENTS.md` skrives/vedlikeholdes av `next dev`: les guidene i `node_modules/next/dist/docs/`
   før Next-kode skrives (versjonen kan avvike fra treningsdata).
-- Upstash Redis er **ikke** satt opp ennå (se `docs/upstash-redis.md` når det trengs).
+- Upstash Redis via Vercel Marketplace: integrasjonen injiserer `KV_REST_API_URL` +
+  `KV_REST_API_TOKEN` (pluss `KV_URL`, `REDIS_URL`, `KV_REST_API_READ_ONLY_TOKEN`) i
+  **Production og Preview — ikke Development**. Klient: `lib/redis.ts` (`import "server-only"`,
+  så build feiler hvis den importeres i en klient-komponent). Se `docs/upstash-redis.md`.
 
 ## Kom i gang
 - Avhengigheter installeres **automatisk** ved øktstart via `.claude/hooks/session-start.sh`.
