@@ -15,7 +15,7 @@ const NATIVE = /[æøåÆØÅ]/;                    // språk-spesifikke tegn (n
 const JSX_TEXT = /\p{L}/u;                   // tekst i JSX flagges ved alle bokstaver (NATIVE = kun æøå)
 // ────────────────────────────────────────────────────────────────────────────
 
-const ATTRS = new Set(["aria-label", "placeholder", "title"]);
+const ATTRS = new Set(["aria-label", "placeholder", "title", "alt"]);
 const ENTITY = /&(?:#\d+|#x[\da-f]+|[a-z][a-z\d]*);/gi; // &nbsp; &copy; … er ikke tekst
 const LOGICAL = new Set([
   ts.SyntaxKind.AmpersandAmpersandToken,
@@ -122,7 +122,8 @@ for (const file of files) {
       const raw = src.slice(node.pos, node.end);
       hit(node.pos + raw.length - raw.trimStart().length, "JSX-tekst", node.text);
     }
-    // aria-label / placeholder / title = "…" eller {"…"} — all tekst, ikke bare æøå.
+    // aria-label / placeholder / title / alt = "…" eller {"…"} — all tekst, ikke bare æøå
+    // (tom alt="" for dekorative bilder er lov).
     if (ts.isJsxAttribute(node) && ATTRS.has(node.name.getText(sf)) && node.initializer) {
       const init = node.initializer;
       const value = ts.isJsxExpression(init) ? init.expression : init;
