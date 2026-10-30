@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="no">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="meta.title">Claude Starter · Statisk side</title>
+  <meta name="description" data-i18n-content="meta.desc" content="Statisk startside med innebygd språkbytte (no/en) — ingen byggesteg.">
+  <style>
+    :root{
+      color-scheme: dark;
+      --bg:#0e1116; --panel:#161c24; --border:#232c38;
+      --fg:#e6edf3; --muted:#9aa7b2; --accent:#7fb0ff;
+    }
+    *{ box-sizing:border-box; }
+    html,body{ margin:0; }
+    body{
+      min-height:100vh; display:flex; flex-direction:column;
+      font-family:system-ui,-apple-system,"Segoe UI",sans-serif;
+      background:var(--bg); color:var(--fg); line-height:1.6;
+    }
+
+    header{
+      display:flex; align-items:center; justify-content:space-between;
+      padding:16px 24px; border-bottom:1px solid var(--border);
+    }
+    .brand{ font-weight:600; letter-spacing:.01em; }
+
+    .langpicker{ display:flex; gap:6px; }
+    .langpicker button{
+      width:36px; height:36px; display:grid; place-items:center;
+      padding:0; font-size:18px; line-height:1; cursor:pointer;
+      background:rgba(255,255,255,.06); border:1px solid var(--border);
+      border-radius:999px; opacity:.5; transition:opacity .15s, border-color .15s, box-shadow .15s;
+    }
+    .langpicker button:hover{ opacity:.85; }
+    .langpicker button[aria-checked="true"]{
+      opacity:1; border-color:var(--accent);
+      box-shadow:0 0 0 2px rgba(127,176,255,.35);
+    }
+
+    main{ flex:1; width:100%; max-width:760px; margin:0 auto; padding:72px 24px; }
+
+    .eyebrow{
+      margin:0 0 14px; color:var(--accent);
+      font-size:12px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+    }
+    h1{ margin:0 0 16px; font-size:clamp(30px,6vw,48px); line-height:1.1; letter-spacing:-.02em; }
+    .subtitle{ margin:0 0 28px; max-width:52ch; color:var(--muted); font-size:18px; }
+
+    .cta{ display:flex; gap:12px; flex-wrap:wrap; }
+    .cta a{
+      display:inline-flex; align-items:center; justify-content:center;
+      height:46px; padding:0 22px; border-radius:999px;
+      font-size:14px; font-weight:500; text-decoration:none; transition:background .15s;
+    }
+    .cta .primary{ background:var(--fg); color:var(--bg); }
+    .cta .primary:hover{ background:#c7d2dd; }
+    .cta .secondary{ border:1px solid var(--border); color:var(--fg); }
+    .cta .secondary:hover{ background:rgba(255,255,255,.05); }
+
+    .features{ margin-top:64px; }
+    .features h2{
+      margin:0 0 18px; color:var(--muted);
+      font-size:12px; font-weight:600; letter-spacing:.12em; text-transform:uppercase;
+    }
+    .grid{ display:grid; gap:14px; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); }
+    .card{ background:var(--panel); border:1px solid var(--border); border-radius:14px; padding:20px; }
+    .card h3{ margin:0 0 8px; font-size:16px; }
+    .card p{ margin:0; color:var(--muted); font-size:14px; }
+
+    footer{
+      border-top:1px solid var(--border); padding:22px 24px;
+      text-align:center; color:var(--muted); font-size:14px;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span class="brand" data-i18n="brand">Claude Starter</span>
+    <div class="langpicker" role="radiogroup" data-i18n-aria="nav.langAria" aria-label="Velg språk">
+      <button type="button" role="radio" data-locale="no" title="Norsk" aria-label="Norsk">🇳🇴</button>
+      <button type="button" role="radio" data-locale="en" title="English" aria-label="English">🇬🇧</button>
+    </div>
+  </header>
+
+  <main>
+    <p class="eyebrow" data-i18n="hero.eyebrow">Statisk starter · spor 1</p>
+    <h1 data-i18n="hero.title">Klar til å bygge</h1>
+    <p class="subtitle" data-i18n="hero.subtitle">
+      En statisk startside med innebygd språkbytte (no/en) i ren JavaScript — ingen byggesteg, ingen avhengigheter. Rediger denne siden og bygg videre.
+    </p>
+    <div class="cta">
+      <a class="primary" href="#" data-i18n="hero.ctaPrimary">Kom i gang</a>
+      <a class="secondary" href="https://code.claude.com/docs/en/claude-code-on-the-web" data-i18n="hero.ctaSecondary">Dokumentasjon</a>
+    </div>
+
+    <section class="features">
+      <h2 data-i18n="features.heading">Dette får du</h2>
+      <div class="grid">
+        <div class="card">
+          <h3 data-i18n="feat.build.title">Ingen byggesteg</h3>
+          <p data-i18n="feat.build.desc">Én index.html med inline CSS. Rediger direkte — ingen avhengigheter å installere.</p>
+        </div>
+        <div class="card">
+          <h3 data-i18n="feat.i18n.title">Innebygd språkbytte</h3>
+          <p data-i18n="feat.i18n.desc">no/en i ren JavaScript. Valget huskes i localStorage, og første besøk følger nettleserspråket.</p>
+        </div>
+        <div class="card">
+          <h3 data-i18n="feat.deploy.title">Auto-deploy på Vercel</h3>
+          <p data-i18n="feat.deploy.desc">Push til main utløser en ny deploy. Framework: Other, tomt build-steg.</p>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer data-i18n="footer">Statisk side · spor 1 · rediger index.html for å komme i gang</footer>
+
+  <script>
+    /*
+     * Lettvekts i18n for en statisk side — ingen rammeverk.
+     * Samme filosofi som @kodo/shared: kanonisk språk = 'no', flat ordbok,
+     * valg lagres i localStorage, og første besøk følger navigator.language.
+     * Nøkkelsettet MÅ være identisk i alle språk (paritet).
+     */
+    (function () {
+      "use strict";
+
+      var STORAGE_KEY = "kodo-locale";
+      var DEFAULT_LOCALE = "no";
+      var AVAILABLE = ["no", "en"];
+
+      var DICT = {
+        no: {
+          "meta.title": "Claude Starter · Statisk side",
+          "meta.desc": "Statisk startside med innebygd språkbytte (no/en) — ingen byggesteg.",
+          "brand": "Claude Starter",
+          "nav.langAria": "Velg språk",
+          "hero.eyebrow": "Statisk starter · spor 1",
+          "hero.title": "Klar til å bygge",
+          "hero.subtitle": "En statisk startside med innebygd språkbytte (no/en) i ren JavaScript — ingen byggesteg, ingen avhengigheter. Rediger denne siden og bygg videre.",
+          "hero.ctaPrimary": "Kom i gang",
+          "hero.ctaSecondary": "Dokumentasjon",
+          "features.heading": "Dette får du",
+          "feat.build.title": "Ingen byggesteg",
+          "feat.build.desc": "Én index.html med inline CSS. Rediger direkte — ingen avhengigheter å installere.",
+          "feat.i18n.title": "Innebygd språkbytte",
+          "feat.i18n.desc": "no/en i ren JavaScript. Valget huskes i localStorage, og første besøk følger nettleserspråket.",
+          "feat.deploy.title": "Auto-deploy på Vercel",
+          "feat.deploy.desc": "Push til main utløser en ny deploy. Framework: Other, tomt build-steg.",
+          "footer": "Statisk side · spor 1 · rediger index.html for å komme i gang"
+        },
+        en: {
+          "meta.title": "Claude Starter · Static site",
+          "meta.desc": "Static landing page with built-in language switching (no/en) — no build step.",
+          "brand": "Claude Starter",
+          "nav.langAria": "Choose language",
+          "hero.eyebrow": "Static starter · track 1",
+          "hero.title": "Ready to build",
+          "hero.subtitle": "A static landing page with built-in language switching (no/en) in plain JavaScript — no build step, no dependencies. Edit this page and build from here.",
+          "hero.ctaPrimary": "Get started",
+          "hero.ctaSecondary": "Documentation",
+          "features.heading": "What you get",
+          "feat.build.title": "No build step",
+          "feat.build.desc": "One index.html with inline CSS. Edit it directly — no dependencies to install.",
+          "feat.i18n.title": "Built-in language switching",
+          "feat.i18n.desc": "no/en in plain JavaScript. The choice is remembered in localStorage, and the first visit follows the browser language.",
+          "feat.deploy.title": "Auto-deploy on Vercel",
+          "feat.deploy.desc": "Pushing to main triggers a new deploy. Framework: Other, empty build step.",
+          "footer": "Static site · track 1 · edit index.html to get started"
+        }
+      };
+
+      function resolveInitialLocale() {
+        var stored = localStorage.getItem(STORAGE_KEY);
+        if (AVAILABLE.indexOf(stored) !== -1) return stored;
+        var nav = (navigator.language || "").slice(0, 2).toLowerCase();
+        if (AVAILABLE.indexOf(nav) !== -1) return nav;
+        return DEFAULT_LOCALE;
+      }
+
+      function applyLocale(locale) {
+        var dict = DICT[locale] || DICT[DEFAULT_LOCALE];
+        document.documentElement.lang = locale;
+
+        // Synlig tekst
+        document.querySelectorAll("[data-i18n]").forEach(function (el) {
+          var value = dict[el.getAttribute("data-i18n")];
+          if (value == null) return;
+          if (el.tagName === "TITLE") document.title = value;
+          else el.textContent = value;
+        });
+
+        // content-attributt (f.eks. <meta name="description">)
+        document.querySelectorAll("[data-i18n-content]").forEach(function (el) {
+          var value = dict[el.getAttribute("data-i18n-content")];
+          if (value != null) el.setAttribute("content", value);
+        });
+
+        // aria-label
+        document.querySelectorAll("[data-i18n-aria]").forEach(function (el) {
+          var value = dict[el.getAttribute("data-i18n-aria")];
+          if (value != null) el.setAttribute("aria-label", value);
+        });
+
+        // Aktivt flagg
+        document.querySelectorAll(".langpicker button").forEach(function (btn) {
+          btn.setAttribute("aria-checked", String(btn.dataset.locale === locale));
+        });
+      }
+
+      function setLocale(locale) {
+        if (AVAILABLE.indexOf(locale) === -1) return;
+        localStorage.setItem(STORAGE_KEY, locale);
+        applyLocale(locale);
+      }
+
+      document.querySelectorAll(".langpicker button").forEach(function (btn) {
+        btn.addEventListener("click", function () { setLocale(btn.dataset.locale); });
+      });
+
+      applyLocale(resolveInitialLocale());
+    })();
+  </script>
+</body>
+</html>

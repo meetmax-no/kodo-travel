@@ -1,0 +1,22 @@
+# Avhengigheter
+node_modules/
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Bygg / output
+dist/
+build/
+.next/
+.vercel/
+
+# Miljøvariabler / hemmeligheter
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+*.log
