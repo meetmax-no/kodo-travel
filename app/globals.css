@@ -17,3 +17,19 @@ body {
   background: var(--kodo-bg);
   color: var(--kodo-text);
 }
+
+/* Splash: vises i 1,5 s og tones ut — ren CSS, så den virker før JS er lastet. */
+@keyframes splash-out {
+  to {
+    opacity: 0;
+    visibility: hidden;
+  }
+}
+.splash {
+  animation: splash-out 0.4s ease-in 1.5s forwards;
+}
+@media (prefers-reduced-motion: reduce) {
+  .splash {
+    animation-duration: 1ms;
+  }
+}

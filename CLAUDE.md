@@ -48,6 +48,7 @@ Velger du ingen av delene nå, står malen som en statisk side til du bestemmer 
   - `npm run dev` — utviklingsserver (http://localhost:3000)
   - `npm run i18n-lint` — i18n-sperren (paritet + hardkodet UI-tekst i `app/`, `components/`)
   - `npm run lint` — ESLint
+  - `npm test` — enhetstester for `lib/` (`node --test`, TypeScript kjøres direkte av Node 22)
   - `npm run build` — produksjonsbuild; `prebuild` kjører i18n-sperren først
 - i18n: bruk `@kodo/shared`-motoren (avhengighetsfri `t()`), ikke next-intl — se `docs/i18n.md`.
 - Ved i18n/Next.js: se `docs/i18n-lint-gate.md` og wire prebuild-sperren.

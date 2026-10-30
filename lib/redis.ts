@@ -4,7 +4,11 @@
 import "server-only";
 import { Redis } from "@upstash/redis";
 
+// automaticDeserialization: false — verdier kommer tilbake som tekst (ellers
+// JSON-tolkes de, så f.eks. et sted som heter «2026» blir et tall), og HGETALL
+// gir rå [felt, verdi, …]-lister.
 export const redis = new Redis({
   url: process.env.KV_REST_API_URL!,
   token: process.env.KV_REST_API_TOKEN!,
+  automaticDeserialization: false,
 });
