@@ -8,7 +8,7 @@ import { DestinationDialog } from "@/components/DestinationDialog";
 import { DestinationRow, TopSection } from "@/components/DestinationViews";
 import { useDestinations } from "@/components/data";
 import { usePerson } from "@/components/PersonProvider";
-import { topCommon, topForPerson } from "@/lib/ranking";
+import { commonSum, topCommon, topForPerson } from "@/lib/ranking";
 
 export default function Overview() {
   const { t } = useLocale();
@@ -37,7 +37,9 @@ export default function Overview() {
         title={t("top.common")}
         items={topCommon(list)}
         empty={t("top.common_empty")}
-        score={(d) => `${d.scores.anita} + ${d.scores.michael} = ${d.scores.anita! + d.scores.michael!}`}
+        score={(d) =>
+          `${t("person.anita_initial")} ${d.scores.anita ?? "–"} + ${t("person.michael_initial")} ${d.scores.michael ?? "–"} = ${commonSum(d)}`
+        }
         onOpen={setOpenId}
       />
       <TopSection

@@ -18,7 +18,9 @@ body {
   color: var(--kodo-text);
 }
 
-/* Splash: vises i 1,5 s og tones ut — ren CSS, så den virker før JS er lastet. */
+/* Splash: vises i 1,5 s fra appen åpnes og tones ut — ren CSS, så tidtakingen er
+   uavhengig av når JS/hydrering er ferdig (treg telefon). Er bildet ikke lastet
+   ennå, vises den uskarpe forhåndsvisningen (blurDataURL ligger i HTML-en). */
 @keyframes splash-out {
   to {
     opacity: 0;

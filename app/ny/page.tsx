@@ -4,7 +4,7 @@
 // egen score. «Lagt inn av» = personen valgt øverst. Samme validering som API-et.
 import { useMemo, useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { kodoButtonPrimary, kodoField, kodoLabel, useLocale } from "@kodo/shared/ui";
+import { kodoButtonPrimary, kodoField, kodoLabel, Select, useLocale } from "@kodo/shared/ui";
 import { CountryPicker } from "@/components/CountryPicker";
 import { send, useDestinations } from "@/components/data";
 import { monthName, usedScores } from "@/components/format";
@@ -13,8 +13,6 @@ import { ScorePicker } from "@/components/ScorePicker";
 import type { CountryCode } from "@/lib/countries";
 import { PLACE_MAX, validateNew } from "@/lib/validate";
 import { MONTHS, WEEKS, weekFitsMonth, weeksInMonth } from "@/lib/weeks";
-
-const toNum = (v: string) => (v === "" ? null : Number(v));
 
 export default function NewDestination() {
   const { t, locale } = useLocale();
@@ -92,23 +90,25 @@ export default function NewDestination() {
           <label htmlFor="month" className={kodoLabel}>
             {t("form.month")} <span className="normal-case tracking-normal">({t("form.optional")})</span>
           </label>
-          <select id="month" className={kodoField} value={month ?? ""} onChange={(e) => onMonth(toNum(e.target.value))}>
-            <option value="">{t("form.not_set")}</option>
-            {MONTHS.map((m) => (
-              <option key={m} value={m}>{monthName(m, locale)}</option>
-            ))}
-          </select>
+          <Select
+            id="month"
+            value={month}
+            emptyLabel={t("form.not_set")}
+            options={MONTHS.map((m) => ({ value: m, label: monthName(m, locale) }))}
+            onChange={onMonth}
+          />
         </div>
         <div>
           <label htmlFor="week" className={kodoLabel}>
             {t("form.week")} <span className="normal-case tracking-normal">({t("form.optional")})</span>
           </label>
-          <select id="week" className={kodoField} value={week ?? ""} onChange={(e) => setWeek(toNum(e.target.value))}>
-            <option value="">{t("form.not_set")}</option>
-            {weekOptions.map((w) => (
-              <option key={w} value={w}>{w}</option>
-            ))}
-          </select>
+          <Select
+            id="week"
+            value={week}
+            emptyLabel={t("form.not_set")}
+            options={weekOptions.map((w) => ({ value: w, label: String(w) }))}
+            onChange={setWeek}
+          />
         </div>
       </div>
 

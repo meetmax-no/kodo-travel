@@ -60,7 +60,20 @@ test("rangering: felles topp 3 — sum, så jevnest, så eldst", () => {
     d("lav", 5, 1, 2),
   ];
   assert.deepEqual(topCommon(list).map((x) => x.id), ["ni-åtte", "åtte-ni", "ti-sju"]);
-  assert.equal(topCommon(list).some((x) => x.id === "bare-anita"), false);
+  // Scoret av bare én er med (manglende = 0): bare-anita (10) foran lav (3).
+  assert.deepEqual(topCommon(list, 10).map((x) => x.id), ["ni-åtte", "åtte-ni", "ti-sju", "bare-anita", "lav"]);
+});
+
+test("rangering: felles topp 3 — også når bare én har scoret", () => {
+  const list = [
+    d("ingen", 1), // uten score → aldri med
+    d("bare-michael", 2, undefined, 10), // 10, laveste 0
+    d("seks-fire", 3, 6, 4), // 10, laveste 4 → foran bare-michael
+    d("bare-anita", 4, 3),
+  ];
+  assert.deepEqual(topCommon(list).map((x) => x.id), ["seks-fire", "bare-michael", "bare-anita"]);
+  assert.deepEqual(topCommon([d("en", 1, undefined, 2)]).map((x) => x.id), ["en"]);
+  assert.deepEqual(topCommon([d("ingen", 1)]), []);
 });
 
 test("validering: gyldig minimum og normalisering", () => {

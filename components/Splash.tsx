@@ -1,12 +1,15 @@
 "use client";
 
 // Splash ved hver oppstart (full sidelasting): rendres i server-HTML-en, så den
-// vises før JS er lastet, og tones ut av CSS etter 1,5 s (.splash i globals.css).
-// Trykk hopper over. Klientnavigering beholder layouten, så den vises ikke på nytt.
-// Midlertidig grafikk — byttes til bildet (public/splash.jpg) når det er klart.
+// vises før JS er lastet, og tones ut av CSS etter 1,5 s (.splash i globals.css) —
+// tidtakingen avhenger ikke av JS. Trykk hopper over. Klientnavigering beholder
+// layouten, så den vises ikke på nytt.
+// Bildet (1440×3120) går via next/image: riktig størrelse/format per skjerm, og en
+// uskarp forhåndsvisning (blurDataURL fra statisk import) til det er lastet.
 import { useState } from "react";
-import { Plane } from "lucide-react";
+import Image from "next/image";
 import { useLocale } from "@kodo/shared/ui";
+import splash from "@/public/splash.jpg";
 
 export function Splash() {
   const { t } = useLocale();
@@ -18,14 +21,19 @@ export function Splash() {
       aria-label={t("splash.skip")}
       onClick={() => setGone(true)}
       onAnimationEnd={() => setGone(true)}
-      className="splash fixed inset-0 z-[200] flex cursor-pointer flex-col items-center justify-center gap-4 border-0 p-0 text-[var(--kodo-text)]"
-      style={{
-        background:
-          "radial-gradient(120% 80% at 50% 0%, var(--kodo-accent-soft), transparent 60%), radial-gradient(100% 70% at 50% 100%, var(--kodo-tint-blue-bg), transparent 60%), var(--kodo-bg)",
-      }}
+      className="splash fixed inset-0 z-[200] cursor-pointer border-0 bg-[var(--kodo-bg)] p-0"
     >
-      <Plane aria-hidden className="h-16 w-16" style={{ color: "var(--kodo-accent)" }} />
-      <span className="text-3xl font-semibold tracking-tight">{t("app.name")}</span>
+      {/* Stående bilde: på brede skjermer beskjæres høyden — utsnittet litt ned så sjøflyet er med. */}
+      <Image
+        src={splash}
+        alt=""
+        fill
+        priority
+        sizes="100vw"
+        placeholder="blur" // i18n-ok (next/image-modus, ikke tekst)
+        className="object-cover"
+        style={{ objectPosition: "50% 62%" }}
+      />
     </button>
   );
 }
