@@ -1,0 +1,19 @@
+@import "tailwindcss";
+@import "@kodo/shared/tokens.css";
+
+/* Ko|Do-tema: flater og tekst kommer fra @kodo/shared/tokens.css (--kodo-*). */
+:root {
+  color-scheme: dark;
+}
+
+@theme inline {
+  --color-background: var(--kodo-bg);
+  --color-foreground: var(--kodo-text);
+  --font-sans: var(--font-geist-sans);
+  --font-mono: var(--font-geist-mono);
+}
+
+body {
+  background: var(--kodo-bg);
+  color: var(--kodo-text);
+}

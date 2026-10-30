@@ -17,8 +17,17 @@ Velg spor når prosjektet startes (spør bruker hvis uklart):
 Velger du ingen av delene nå, står malen som en statisk side til du bestemmer deg.
 
 ## Teknologi
-- Standard: statisk HTML. Ved spor 2: Next.js (App Router, TS) + Tailwind.
-- (oppdater denne når sporet er valgt)
+- **Spor 2 valgt:** Next.js 16.4 (App Router, TypeScript, Turbopack) + Tailwind v4
+  (via `@tailwindcss/turbopack`-loaderen i `next.config.ts`, ingen PostCSS-config).
+  `cacheComponents` og `partialPrefetching` er på (create-next-app-standard).
+- i18n: `@kodo/shared` (`github:meetmax-no/kodo-shared-repo#main`) via `transpilePackages`.
+  Ordbøker: `lib/locales/no.json` (kanonisk) + `en.json`, flate og med identisk nøkkelsett.
+  `<LocaleProvider>` wires én gang i `app/providers.tsx` → `app/layout.tsx`.
+- Tema: `@kodo/shared/tokens.css` importeres i `app/globals.css` rett etter Tailwind
+  (`--kodo-*`-tokens; `@source` der gjør at Tailwind genererer klassene til shared-komponentene).
+- `AGENTS.md` skrives/vedlikeholdes av `next dev`: les guidene i `node_modules/next/dist/docs/`
+  før Next-kode skrives (versjonen kan avvike fra treningsdata).
+- Upstash Redis er **ikke** satt opp ennå (se `docs/upstash-redis.md` når det trengs).
 
 ## Kom i gang
 - Avhengigheter installeres **automatisk** ved øktstart via `.claude/hooks/session-start.sh`.
@@ -33,6 +42,10 @@ Velger du ingen av delene nå, står malen som en statisk side til du bestemmer 
 - Commit ofte med tydelige meldinger; push til GitHub.
 - Vi jobber med **Vercel** i tillegg til GitHub: push til `main` utløser **auto-deploy** på Vercel.
 - Legg til test-/lint-kommandoer her når de finnes, så Claude vet hvordan de kjøres.
+  - `npm run dev` — utviklingsserver (http://localhost:3000)
+  - `npm run i18n-lint` — i18n-sperren (paritet + hardkodet UI-tekst i `app/`, `components/`)
+  - `npm run lint` — ESLint
+  - `npm run build` — produksjonsbuild; `prebuild` kjører i18n-sperren først
 - i18n: bruk `@kodo/shared`-motoren (avhengighetsfri `t()`), ikke next-intl — se `docs/i18n.md`.
 - Ved i18n/Next.js: se `docs/i18n-lint-gate.md` og wire prebuild-sperren.
 - Upstash Redis: settes vanligvis opp via Vercel Marketplace — se `docs/upstash-redis.md`.
