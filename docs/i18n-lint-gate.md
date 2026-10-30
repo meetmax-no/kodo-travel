@@ -23,6 +23,9 @@ håndhever regelen, ikke disiplin.
      Leses med TypeScript-parseren, så linjeskift ikke avgjør om tekst fanges.
    - Attributt-literaler: `aria-label` / `placeholder` / `title` = `"Tekst"` eller
      `{"Tekst"}` (skal være `{t("nøkkel")}`).
+   - Strenger med språk-spesifikke tegn hvor som helst ellers i fila —
+     `{laster ? "…" : "…"}`, `setError("…")`, `` `Hei ${navn}` ``, `alt="…"`. Unntak:
+     `t()`-nøkler, `console.*`, import-stier, typer og egenskapsnavn.
    - Bevisst literal? Legg `i18n-ok` som kommentar på linja.
 
 > **Server-ruter** (`.ts` API-ruter) skannes ikke — de kan ikke bruke `t()`.
@@ -91,11 +94,36 @@ for (const r of ROOTS) {
   try { walk(r, files); } catch { /* mangler */ }
 }
 
-// Strengliteral direkte i JSX: {"…"} / {`…`} (uten ${}-innskudd).
-function literal(expr) {
-  return expr && (ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr))
-    ? expr.text
-    : null;
+// Teksten i en streng-/template-literal (uten ${…}-uttrykkene), ellers null.
+function literalText(node) {
+  if (!node) return null;
+  if (ts.isStringLiteral(node) || ts.isNoSubstitutionTemplateLiteral(node)) return node.text;
+  if (ts.isTemplateExpression(node))
+    return [node.head.text, ...node.templateSpans.map((s) => s.literal.text)].join(" ");
+  return null;
+}
+
+// Navnet på funksjonen som kalles: t(…) → "t", i18n.t(…) → "t", console.log(…) → "log".
+function calleeName(call) {
+  const e = call.expression;
+  if (ts.isIdentifier(e)) return e.text;
+  if (ts.isPropertyAccessExpression(e)) return e.name.text;
+  return null;
+}
+
+// Strenger som ikke er UI-tekst: t()-nøkler, console.*, modulstier, typer og egenskapsnavn.
+function exempt(node) {
+  const p = node.parent;
+  if (ts.isCallExpression(p) && p.arguments.includes(node) && calleeName(p) === "t") return true;
+  if ((ts.isImportDeclaration(p) || ts.isExportDeclaration(p)) && p.moduleSpecifier === node) return true;
+  if (ts.isLiteralTypeNode(p)) return true;
+  if ("name" in p && p.name === node) return true; // { "nøkkel": … }
+  for (let a = p; a; a = a.parent) {
+    if (ts.isCallExpression(a) && ts.isPropertyAccessExpression(a.expression)
+        && ts.isIdentifier(a.expression.expression) && a.expression.expression.text === "console")
+      return true;
+  }
+  return false;
 }
 
 const hits = [];
@@ -112,23 +140,28 @@ for (const file of files) {
     hits.push({ file, line: line + 1, why, text: text.replace(/\s+/g, " ").trim().slice(0, 60) });
   };
 
+  const reported = new Set(); // literaler som allerede er meldt som attributt
   const visit = (node) => {
     // JSX-tekst mellom tagger, uansett hvor på linja den står.
     if (ts.isJsxText(node) && NATIVE.test(node.text)) {
       const raw = src.slice(node.pos, node.end);
       hit(node.pos + raw.length - raw.trimStart().length, "JSX-tekst", node.text);
     }
-    // {"…"} som barn av et element/fragment.
-    if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
-      const text = literal(node.expression);
-      if (text != null && NATIVE.test(text)) hit(node.expression.getStart(sf), "JSX-tekst", text);
-    }
-    // aria-label / placeholder / title = "…" eller {"…"}.
+    // aria-label / placeholder / title = "…" eller {"…"} — all tekst, ikke bare æøå.
     if (ts.isJsxAttribute(node) && ATTRS.has(node.name.getText(sf)) && node.initializer) {
       const init = node.initializer;
-      const text = ts.isStringLiteral(init) ? init.text : literal(init.expression);
-      if (text != null && text.trim() !== "") hit(node.getStart(sf), "attributt", node.getText(sf));
+      const value = ts.isJsxExpression(init) ? init.expression : init;
+      const text = literalText(value);
+      if (text != null && text.trim() !== "") {
+        reported.add(value);
+        hit(node.getStart(sf), "attributt", node.getText(sf));
+      }
     }
+    // Strenger med språk-spesifikke tegn hvor som helst ellers: {"…"}, {x ? "…" : "…"},
+    // setError("…"), `Hei ${navn}` osv.
+    const text = literalText(node);
+    if (text != null && NATIVE.test(text) && !reported.has(node) && !exempt(node))
+      hit(node.getStart(sf), "streng", node.getText(sf));
     ts.forEachChild(node, visit);
   };
   visit(sf);
