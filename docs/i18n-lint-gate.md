@@ -1,6 +1,7 @@
 # i18n-sperre (lint-gate) — mal for nye prosjekter
 
-En liten, avhengighetsfri **build-sperre** som feiler før hver `next build` hvis
+En liten **build-sperre** uten ekstra avhengigheter (bruker `typescript`, som
+Next-prosjektet allerede har) som feiler før hver `next build` hvis
 noen har (a) brutt paritet mellom språkfilene, eller (b) hardkodet synlig UI-tekst
 i stedet for `t()`. Poenget: **fjern «huske det»-avhengigheten** — maskinen
 håndhever regelen, ikke disiplin.
@@ -17,9 +18,11 @@ håndhever regelen, ikke disiplin.
 1. **Paritet** — alle språkfiler har identisk nøkkelsett (ingen «kun i no» / «kun
    i en»). Fanger glemte oversettelser og feilstavede nøkler ved innlegging.
 2. **Hardkodet UI-tekst** i `.tsx` (klient-komponenter):
-   - JSX-tekstnoder med språk-spesifikke tegn (f.eks. `æ/ø/å`) som ikke går via `t()`.
-   - Attributt-literaler: `aria-label` / `placeholder` / `title` = `"Tekst"` (skal
-     være `{t("nøkkel")}`).
+   - JSX-tekstnoder med språk-spesifikke tegn (f.eks. `æ/ø/å`) som ikke går via `t()`
+     — uansett hvor på linja de står (`<h1>Hei på deg</h1>`), også `{"…"}`-literaler.
+     Leses med TypeScript-parseren, så linjeskift ikke avgjør om tekst fanges.
+   - Attributt-literaler: `aria-label` / `placeholder` / `title` = `"Tekst"` eller
+     `{"Tekst"}` (skal være `{t("nøkkel")}`).
    - Bevisst literal? Legg `i18n-ok` som kommentar på linja.
 
 > **Server-ruter** (`.ts` API-ruter) skannes ikke — de kan ikke bruke `t()`.
@@ -40,6 +43,9 @@ Drop-in. Juster kun `CONFIG`-blokken øverst per prosjekt.
 // i18n-sperre: feiler build hvis paritet brytes eller UI-tekst er hardkodet.
 import { readFileSync, readdirSync, statSync } from "node:fs";
 import { join } from "node:path";
+// TypeScript-parseren (allerede devDependency i Next-prosjektet) — leser JSX
+// som tre, så linjeskift og plassering på linja ikke avgjør om tekst fanges.
+import ts from "typescript";
 
 // ─── CONFIG (juster per prosjekt) ───────────────────────────────────────────
 const LOCALES = ["lib/locales/no.json", "lib/locales/en.json"]; // kanonisk = [0]
@@ -49,8 +55,7 @@ const OK = "i18n-ok";                        // suppress-markør på en linje
 const NATIVE = /[æøåÆØÅ]/;                    // språk-spesifikke tegn (norsk her)
 // ────────────────────────────────────────────────────────────────────────────
 
-const ATTR = /\b(aria-label|placeholder|title)\s*=\s*"([^"{}]*[^\s"{}][^"{}]*)"/;
-const JSX_NATIVE = new RegExp(`^[A-Za-zÆØÅæøå][^<>={}();]*${NATIVE.source}`);
+const ATTRS = new Set(["aria-label", "placeholder", "title"]);
 
 const problems = [];
 
@@ -86,20 +91,47 @@ for (const r of ROOTS) {
   try { walk(r, files); } catch { /* mangler */ }
 }
 
+// Strengliteral direkte i JSX: {"…"} / {`…`} (uten ${}-innskudd).
+function literal(expr) {
+  return expr && (ts.isStringLiteral(expr) || ts.isNoSubstitutionTemplateLiteral(expr))
+    ? expr.text
+    : null;
+}
+
 const hits = [];
 for (const file of files) {
   if (SKIP.has(file.split("\\").join("/"))) continue;
-  let block = false;
-  readFileSync(file, "utf8").split("\n").forEach((raw, i) => {
-    const line = raw.trim();
-    if (block) { if (line.includes("*/")) block = false; return; }
-    if (line.startsWith("/*")) { if (!line.includes("*/")) block = true; return; }
-    if (line.startsWith("//") || line.startsWith("*") || line.includes(OK)) return;
-    const a = ATTR.exec(raw);
-    if (a) hits.push({ file, line: i + 1, why: "attributt", text: a[0].trim() });
-    if (!raw.includes("t(") && JSX_NATIVE.test(line))
-      hits.push({ file, line: i + 1, why: "JSX-tekst", text: line.slice(0, 60) });
-  });
+  const src = readFileSync(file, "utf8");
+  const lines = src.split("\n");
+  const sf = ts.createSourceFile(file, src, ts.ScriptTarget.Latest, true, ts.ScriptKind.TSX);
+
+  // pos = første tegn i teksten (ikke innrykk/linjeskift foran).
+  const hit = (pos, why, text) => {
+    const line = sf.getLineAndCharacterOfPosition(pos).line;
+    if (lines[line].includes(OK)) return;
+    hits.push({ file, line: line + 1, why, text: text.replace(/\s+/g, " ").trim().slice(0, 60) });
+  };
+
+  const visit = (node) => {
+    // JSX-tekst mellom tagger, uansett hvor på linja den står.
+    if (ts.isJsxText(node) && NATIVE.test(node.text)) {
+      const raw = src.slice(node.pos, node.end);
+      hit(node.pos + raw.length - raw.trimStart().length, "JSX-tekst", node.text);
+    }
+    // {"…"} som barn av et element/fragment.
+    if (ts.isJsxExpression(node) && !ts.isJsxAttribute(node.parent)) {
+      const text = literal(node.expression);
+      if (text != null && NATIVE.test(text)) hit(node.expression.getStart(sf), "JSX-tekst", text);
+    }
+    // aria-label / placeholder / title = "…" eller {"…"}.
+    if (ts.isJsxAttribute(node) && ATTRS.has(node.name.getText(sf)) && node.initializer) {
+      const init = node.initializer;
+      const text = ts.isStringLiteral(init) ? init.text : literal(init.expression);
+      if (text != null && text.trim() !== "") hit(node.getStart(sf), "attributt", node.getText(sf));
+    }
+    ts.forEachChild(node, visit);
+  };
+  visit(sf);
 }
 
 if (problems.length || hits.length) {
