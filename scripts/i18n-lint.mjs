@@ -12,9 +12,16 @@ const ROOTS = ["app", "components"];        // hvor .tsx skannes
 const SKIP = new Set([]);                    // midlertidige unntak, f.eks. "app/page.tsx"
 const OK = "i18n-ok";                        // suppress-markør på en linje
 const NATIVE = /[æøåÆØÅ]/;                    // språk-spesifikke tegn (norsk her)
+const JSX_TEXT = /\p{L}/u;                   // tekst i JSX flagges ved alle bokstaver (NATIVE = kun æøå)
 // ────────────────────────────────────────────────────────────────────────────
 
 const ATTRS = new Set(["aria-label", "placeholder", "title"]);
+const ENTITY = /&(?:#\d+|#x[\da-f]+|[a-z][a-z\d]*);/gi; // &nbsp; &copy; … er ikke tekst
+const LOGICAL = new Set([
+  ts.SyntaxKind.AmpersandAmpersandToken,
+  ts.SyntaxKind.BarBarToken,
+  ts.SyntaxKind.QuestionQuestionToken,
+]);
 
 const problems = [];
 
@@ -82,6 +89,18 @@ function exempt(node) {
   return false;
 }
 
+// Havner strengen rett i JSX som tekst? {"…"}, {x ? "…" : …}, {x && "…"}, {x ?? "…"}.
+function rendersInJsx(node) {
+  let n = node;
+  for (let p = n.parent; p; n = p, p = p.parent) {
+    if (ts.isParenthesizedExpression(p)) continue;
+    if (ts.isConditionalExpression(p) && p.condition !== n) continue;
+    if (ts.isBinaryExpression(p) && p.right === n && LOGICAL.has(p.operatorToken.kind)) continue;
+    return ts.isJsxExpression(p) && !ts.isJsxAttribute(p.parent);
+  }
+  return false;
+}
+
 const hits = [];
 for (const file of files) {
   if (SKIP.has(file.split("\\").join("/"))) continue;
@@ -99,7 +118,7 @@ for (const file of files) {
   const reported = new Set(); // literaler som allerede er meldt som attributt
   const visit = (node) => {
     // JSX-tekst mellom tagger, uansett hvor på linja den står.
-    if (ts.isJsxText(node) && NATIVE.test(node.text)) {
+    if (ts.isJsxText(node) && JSX_TEXT.test(node.text.replace(ENTITY, ""))) {
       const raw = src.slice(node.pos, node.end);
       hit(node.pos + raw.length - raw.trimStart().length, "JSX-tekst", node.text);
     }
@@ -113,11 +132,14 @@ for (const file of files) {
         hit(node.getStart(sf), "attributt", node.getText(sf));
       }
     }
-    // Strenger med språk-spesifikke tegn hvor som helst ellers: {"…"}, {x ? "…" : "…"},
-    // setError("…"), `Hei ${navn}` osv.
+    // Strenger: med språk-spesifikke tegn hvor som helst (setError("…"), `Hei ${navn}` …),
+    // og med alle bokstaver når de havner rett i JSX ({laster ? "Laster…" : …}).
     const text = literalText(node);
-    if (text != null && NATIVE.test(text) && !reported.has(node) && !exempt(node))
-      hit(node.getStart(sf), "streng", node.getText(sf));
+    if (text != null && !reported.has(node) && !exempt(node)) {
+      const inJsx = rendersInJsx(node);
+      if (NATIVE.test(text) || (inJsx && JSX_TEXT.test(text)))
+        hit(node.getStart(sf), inJsx ? "JSX-tekst" : "streng", node.getText(sf));
+    }
     ts.forEachChild(node, visit);
   };
   visit(sf);
